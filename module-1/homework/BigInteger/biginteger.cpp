@@ -1,19 +1,6 @@
 #include "biginteger.h"
 
-int BigInteger::getDigit(int i) const {
-	return i < this->digits.size() ? this->digits[i] : 0;
-}
-
-void BigInteger::trim() {
-	while (this->digits.size() > 1 && this->digits.back() == 0) {
-		this->digits.pop_back();
-	}
-}
-
-BigInteger::BigInteger() {
-	this->digits.push_back(0);
-	sign = 1;
-}
+BigInteger::BigInteger() : digits({ 0 }), sign(1) { }
 
 BigInteger::BigInteger(int x) {
 	*this = BigInteger((long long int) x);
@@ -111,22 +98,26 @@ bool BigInteger::operator<=(const BigInteger& x) const {
 	return !(*this > x);
 }
 
-BigInteger abs(BigInteger x) {
-	x.sign = 1;
-	return x;
+BigInteger abs(const BigInteger& x) {
+	BigInteger copy = x;
+	copy.sign = 1;
+	return copy;
 }
 
-BigInteger max(const BigInteger a, const BigInteger b) {
-	return a > b ? a : b;
+BigInteger max(const BigInteger& a, const BigInteger& b) {
+	return a > b ? BigInteger(a) : BigInteger(b);
 }
 
-BigInteger min(const BigInteger a, const BigInteger b) {
-	return a < b ? a : b;
+BigInteger min(const BigInteger& a, const BigInteger& b) {
+	return a < b ? BigInteger(a) : BigInteger(b);
 }
 
-BigInteger BigInteger::operator=(const BigInteger& x) {
-	sign = x.sign;
-	digits = x.digits;
+BigInteger& BigInteger::operator=(const BigInteger& x) {
+	if (*this != x) {
+		sign = x.sign;
+		digits = x.digits;
+	}
+
 	return *this;
 }
 
@@ -137,71 +128,75 @@ BigInteger BigInteger::operator-() const {
 }
 
 BigInteger BigInteger::operator+(const BigInteger& x) const {
-	BigInteger a, b, res;
-	int mod = this->sign == x.sign ? 1 : -1, ost = 0;
-
-	// Let be |a| > |b|
-	if (abs(*this) > abs(x)) a = *this, b = x;
-	else a = x, b = *this;
-
-	res.digits.assign(a.digits.size() + 1, 0);
-	res.sign = a.sign;
-
-	for (int i = 0; i < a.digits.size() || i < b.digits.size() || ost != 0; i++) {
-		res.digits[i] = a.getDigit(i) + mod * b.getDigit(i) + ost;
-		ost = 0;
-
-		if (res.digits[i] >= BASE) {
-			res.digits[i] -= BASE;
-			ost++;
-		}
-		else if (res.digits[i] < 0) {
-			res.digits[i] += BASE;
-			ost--;
-		}
-	}
-
-	res.trim();
-	return res;
+	return BigInteger(*this) += x;
 }
 
 BigInteger BigInteger::operator-(const BigInteger& x) const {
-	return *this + (-x);
+	return BigInteger(*this) -= x;
 }
 
 BigInteger BigInteger::operator*(const BigInteger& x) const {
-	BigInteger a = max(*this, x), b = min(*this, x), res; // Let be a > b
+	return BigInteger(*this) *= x;
+}
+
+BigInteger BigInteger::operator/(const int& x) const {
+	return BigInteger(*this) /= x;
+}
+
+BigInteger BigInteger::operator/(const BigInteger& x) const {
+	return BigInteger(*this) /= x;
+}
+
+BigInteger BigInteger::operator%(const BigInteger& x) const {
+	return BigInteger(*this) %= x;
+}
+
+BigInteger& BigInteger::operator+=(const BigInteger& x) {
+	return add(x, false);
+}
+
+BigInteger& BigInteger::operator-=(const BigInteger& x) {
+	return add(x, true);
+}
+
+BigInteger& BigInteger::operator*=(const BigInteger& x) {
+	BigInteger res;
 	int ost = 0;
 
-	res.sign = a.sign * b.sign;
-	res.digits.assign(a.digits.size() + b.digits.size() + 1, 0);
+	res.sign = sign * x.sign;
 
-	for (int i = 0; i < b.digits.size(); i++) {
-		for (int j = 0; j < a.digits.size() || ost; j++) {
-			res.digits[i + j] += a.getDigit(j) * b.getDigit(i) + ost;
+	for (int i = 0; i < digits.size(); i++) {
+		for (int j = 0; j < x.digits.size() || ost; j++) {
+			int k = i + j;
+
+			if (k >= res.digits.size()) {
+				res.digits.push_back(0);
+			}
+
+			res.digits[k] += getDigit(i) * x.getDigit(j) + ost;
 			ost = 0;
 
-			if (res.digits[i + j] >= BASE) {
-				ost = res.digits[i + j] / BASE;
-				res.digits[i + j] %= BASE;
+			if (res.digits[k] >= BASE) {
+				ost = res.digits[k] / BASE;
+				res.digits[k] %= BASE;
 			}
 		}
 	}
 
 	res.trim();
-	return res;
+	return *this = res;
 }
 
-BigInteger BigInteger::operator/(const int& x) const {
+BigInteger& BigInteger::operator/=(const int& x) {
 	if (x == 0) throw "Division by zero";
 
 	BigInteger res;
 	std::string dividend = "";
 
-	res.digits.assign(this->digits.size() + 1, 0);
+	res.digits.assign(digits.size() + 1, 0);
 
-	for (int i = this->digits.size() - 1; i >= 0; i--) {
-		dividend += std::to_string(this->digits[i]);
+	for (int i = digits.size() - 1; i >= 0; i--) {
+		dividend += std::to_string(digits[i]);
 		int temp = stol(dividend);
 
 		if (temp / x > 0) {
@@ -211,19 +206,17 @@ BigInteger BigInteger::operator/(const int& x) const {
 	}
 
 	res.trim();
-	return res;
+	return *this = res;
 }
 
-BigInteger BigInteger::operator/(const BigInteger& x) const {
+BigInteger& BigInteger::operator/=(const BigInteger& x) {
 	if (x == BigInteger(0)) throw "Division by zero";
-
-	BigInteger a = abs(*this), b = abs(x);
-	BigInteger l = 0, r = a + BigInteger(1);
+	BigInteger l = 0, r = abs(*this) + BigInteger(1);
 
 	while (r - l > BigInteger(1)) {
 		BigInteger mid = (l + r) / 2;
 
-		if (b * mid > a) {
+		if (abs(x) * mid > abs(*this)) {
 			r = mid;
 		}
 		else {
@@ -231,37 +224,16 @@ BigInteger BigInteger::operator/(const BigInteger& x) const {
 		}
 	}
 
-	l.sign = this->sign * x.sign;
-	return l;
+	l.sign = sign * x.sign;
+	return *this = l;
 }
 
-BigInteger BigInteger::operator%(const BigInteger& x) const {
-	return *this - *this / x * x;
-}
-
-BigInteger BigInteger::operator+=(const BigInteger& x) {
-	return *this = *this + x;
-}
-
-BigInteger BigInteger::operator-=(const BigInteger& x) {
-	return *this = *this - x;
-}
-
-BigInteger BigInteger::operator*=(const BigInteger& x) {
-	return *this = *this * x;
-}
-
-BigInteger BigInteger::operator/=(const BigInteger& x) {
-	return *this = *this / x;
-}
-
-BigInteger BigInteger::operator%=(const BigInteger& x) {
-	return *this = *this % x;
+BigInteger& BigInteger::operator%=(const BigInteger& x) {
+	return *this -= *this / x * x;
 }
 
 BigInteger& BigInteger::operator--() {
-	*this -= 1;
-	return *this;
+	return *this -= 1;
 }
 
 BigInteger BigInteger::operator--(int) {
@@ -271,8 +243,7 @@ BigInteger BigInteger::operator--(int) {
 }
 
 BigInteger& BigInteger::operator++() {
-	*this += 1;
-	return *this;
+	return *this += 1;
 }
 
 BigInteger BigInteger::operator++(int) {
@@ -287,6 +258,7 @@ BigInteger::operator bool() const {
 
 std::ostream& operator<<(std::ostream& out, const BigInteger& x) {
 	if (x.sign == -1) out << "-";
+
 	out << x.digits.back();
 
 	for (int i = x.digits.size() - 2; i >= 0; i--) {
@@ -307,4 +279,56 @@ std::istream& operator>>(std::istream& in, BigInteger& x) {
 	in >> str;
 	x = BigInteger(str);
 	return in;
+}
+
+int BigInteger::getDigit(int i) const {
+	return i < digits.size() ? digits[i] : 0;
+}
+
+BigInteger& BigInteger::add(const BigInteger& x, const bool minus) {
+	int operation = sign * x.sign * (minus ? -1 : 1), ost = 0;
+	const bool isThisBigger = abs(*this) > abs(x);
+
+	if (!isThisBigger) {
+		sign = x.sign * (minus ? -1 : 1);
+	}
+
+	for (int i = 0; i < digits.size() || i < x.digits.size() || ost != 0; i++) {
+		if (i >= digits.size()) {
+			digits.push_back(0);
+		}
+
+		if (operation == -1) {
+			if (isThisBigger) {
+				digits[i] -= x.getDigit(i);
+			}
+			else {
+				digits[i] = x.getDigit(i) - getDigit(i);
+			}
+		}
+		else {
+			digits[i] += x.getDigit(i);
+		}
+
+		digits[i] += ost;
+		ost = 0;
+
+		if (digits[i] >= BASE) {
+			digits[i] -= BASE;
+			ost++;
+		}
+		else if (digits[i] < 0) {
+			digits[i] += BASE;
+			ost--;
+		}
+	}
+
+	trim();
+	return *this;
+};
+
+void BigInteger::trim() {
+	while (this->digits.size() > 1 && this->digits.back() == 0) {
+		this->digits.pop_back();
+	}
 }
