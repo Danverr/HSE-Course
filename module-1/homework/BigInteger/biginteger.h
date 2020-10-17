@@ -51,7 +51,7 @@ public:
 	friend std::istream& operator>>(std::istream&, BigInteger&);
 
 private:
-	int sign;
+	bool isNeg;
 	std::vector<int> digits;
 
 	int getDigit(const int) const;

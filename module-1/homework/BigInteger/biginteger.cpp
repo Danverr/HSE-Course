@@ -1,13 +1,13 @@
 #include "biginteger.h"
 
-BigInteger::BigInteger() : digits({ 0 }), sign(1) { }
+BigInteger::BigInteger() : digits({ 0 }), isNeg(0) { }
 
 BigInteger::BigInteger(int x) {
 	*this = BigInteger((long long int) x);
 }
 
 BigInteger::BigInteger(long long int x) {
-	sign = x >= 0 ? 1 : -1;
+	isNeg = x < 0;
 
 	if (x == 0) {
 		this->digits.push_back(0);
@@ -20,7 +20,7 @@ BigInteger::BigInteger(long long int x) {
 }
 
 BigInteger::BigInteger(std::string str) {
-	this->sign = str.size() && str[0] == '-' ? -1 : 1;
+	this->isNeg = str.size() && str[0] == '-';
 
 	for (int i = str.size(); i > 0; i -= DIGITS_LEN) {
 		std::string substr = i < DIGITS_LEN ? str.substr(0, i) : str.substr(i - DIGITS_LEN, DIGITS_LEN);
@@ -29,7 +29,7 @@ BigInteger::BigInteger(std::string str) {
 }
 
 std::string BigInteger::toString() const {
-	std::string str = sign == -1 ? "-" : "";
+	std::string str = isNeg ? "-" : "";
 
 	// Starting from highest digits
 	for (int i = digits.size() - 1; i >= 0; i--) {
@@ -40,7 +40,7 @@ std::string BigInteger::toString() const {
 }
 
 bool BigInteger::operator==(const BigInteger& x) const {
-	bool sameSign = x.sign == this->sign;
+	bool sameSign = x.isNeg == this->isNeg;
 	bool sameDigits = 1;
 
 	// Comparing all digits
@@ -62,10 +62,10 @@ bool BigInteger::operator>(const BigInteger& x) const {
 	int res = false;
 
 	// Comparing signs
-	if (this->sign == 1 && x.sign == -1) {
+	if (!this->isNeg && x.isNeg) {
 		return true;
 	}
-	else if (this->sign == -1 && x.sign == 1) {
+	else if (this->isNeg && !x.isNeg) {
 		return false;
 	}
 
@@ -83,7 +83,7 @@ bool BigInteger::operator>(const BigInteger& x) const {
 
 	// If both of numbers are negative
 	// |a| > |b| => a < b 
-	return this->sign == -1 ? !res : res;
+	return this->isNeg ? !res : res;
 }
 
 bool BigInteger::operator>=(const BigInteger& x) const {
@@ -100,7 +100,7 @@ bool BigInteger::operator<=(const BigInteger& x) const {
 
 BigInteger abs(const BigInteger& x) {
 	BigInteger copy = x;
-	copy.sign = 1;
+	copy.isNeg = 0;
 	return copy;
 }
 
@@ -114,7 +114,7 @@ BigInteger min(const BigInteger& a, const BigInteger& b) {
 
 BigInteger& BigInteger::operator=(const BigInteger& x) {
 	if (*this != x) {
-		sign = x.sign;
+		isNeg = x.isNeg;
 		digits = x.digits;
 	}
 
@@ -123,7 +123,7 @@ BigInteger& BigInteger::operator=(const BigInteger& x) {
 
 BigInteger BigInteger::operator-() const {
 	BigInteger copy = *this;
-	copy.sign *= -1;
+	copy.isNeg ^= 1;
 	return copy;
 }
 
@@ -163,7 +163,7 @@ BigInteger& BigInteger::operator*=(const BigInteger& x) {
 	BigInteger res;
 	int ost = 0;
 
-	res.sign = sign * x.sign;
+	res.isNeg = isNeg ^ x.isNeg;
 
 	for (int i = 0; i < digits.size(); i++) {
 		for (int j = 0; j < x.digits.size() || ost; j++) {
@@ -224,7 +224,7 @@ BigInteger& BigInteger::operator/=(const BigInteger& x) {
 		}
 	}
 
-	l.sign = sign * x.sign;
+	l.isNeg = isNeg ^ x.isNeg;
 	return *this = l;
 }
 
@@ -257,7 +257,7 @@ BigInteger::operator bool() const {
 }
 
 std::ostream& operator<<(std::ostream& out, const BigInteger& x) {
-	if (x.sign == -1) out << "-";
+	if (x.isNeg) out << "-";
 
 	out << x.digits.back();
 
@@ -286,11 +286,11 @@ int BigInteger::getDigit(int i) const {
 }
 
 BigInteger& BigInteger::add(const BigInteger& x, const bool minus) {
-	int operation = sign * x.sign * (minus ? -1 : 1), ost = 0;
-	const bool isThisBigger = abs(*this) > abs(x);
+	int ost = 0;
+	const bool isThisBigger = abs(*this) > abs(x), isSubtraction = isNeg ^ x.isNeg ^ minus;
 
 	if (!isThisBigger) {
-		sign = x.sign * (minus ? -1 : 1);
+		isNeg = x.isNeg ^ minus;
 	}
 
 	for (int i = 0; i < digits.size() || i < x.digits.size() || ost != 0; i++) {
@@ -298,7 +298,7 @@ BigInteger& BigInteger::add(const BigInteger& x, const bool minus) {
 			digits.push_back(0);
 		}
 
-		if (operation == -1) {
+		if (isSubtraction) {
 			if (isThisBigger) {
 				digits[i] -= x.getDigit(i);
 			}
