@@ -65,7 +65,11 @@ namespace task {
 			int value;
 			list_item* prev_item, * next_item;
 
-			list_item(const int& value = int(), list_item* prev_item = nullptr, list_item* next_item = nullptr);
+			list_item(
+				const int& value = int(),
+				list_item* prev_item = nullptr,
+				list_item* next_item = nullptr
+				);
 		};
 
 		//  ---  Private methods  ---  //

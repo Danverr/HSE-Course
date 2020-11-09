@@ -27,6 +27,10 @@ task::list::~list() {
 
 
 task::list& task::list::operator=(const list& other) {
+	if(this == &other){
+		return *this;
+	}
+
 	clear();
 
 	for (auto item = other._begin; item != nullptr; item = item->next_item) {
