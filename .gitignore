@@ -1,3 +1,11 @@
-
 module-1/homework/BigInteger/.vs/*
+module-1/homework/BigInteger/.vscode/*
 module-1/homework/BigInteger/out/*
+
+module-1/homework/List/.vs/*
+module-1/homework/List/.vscode/*
+module-1/homework/List/out/*
+
+module-1/homework/Geometry/.vs/*
+module-1/homework/Geometry/.vscode/*
+module-1/homework/Geometry/out/*

@@ -51,8 +51,8 @@ public:
 	friend std::istream& operator>>(std::istream&, BigInteger&);
 
 private:
-	bool isNeg;
-	std::vector<int> digits;
+	bool isNeg = false;
+	std::vector<int> digits = { };
 
 	int getDigit(const int) const;
 	BigInteger& add(const BigInteger&, const bool);

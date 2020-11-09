@@ -1,6 +1,6 @@
 #include "biginteger.h"
 
-BigInteger::BigInteger() : digits({ 0 }), isNeg(0) { }
+BigInteger::BigInteger() { }
 
 BigInteger::BigInteger(int x) {
 	*this = BigInteger((long long int) x);
