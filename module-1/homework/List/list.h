@@ -5,47 +5,80 @@
 namespace task {
 
 
-class list {
+	class list {
 
-public:
+	public:
 
-    list();
-    list(size_t count, const int& value = int());
+		//  ---  Member functions   ---  //
 
-    ~list();
-    list& operator=(const list& other);
+		list();
+		list(const list&);
+		list(size_t count, const int& value = int());
+		~list();
 
-
-    int& front();
-    const int& front() const;
-
-    int& back();
-    const int& back() const;
+		list& operator=(const list& other);
 
 
-    bool empty() const;
-    size_t size() const;
-    void clear();
+
+		//  ---  Element access  ---  //
+
+		int& front();
+		const int& front() const;
+
+		int& back();
+		const int& back() const;
 
 
-    void push_back(const int& value);
-    void pop_back();
-    void push_front(const int& value);
-    void pop_front();
-    void resize(size_t count);
-    void swap(list& other);
+
+		//  ---  Capacity  ---  //
+
+		bool empty() const;
+		size_t size() const;
 
 
-    void remove(const int& value);
-    void unique();
-    void sort();
 
-    // Your code goes here?..
+		//  ---  Modifiers  ---  //
 
-private:
+		void push_back(const int& value);
+		void pop_back();
 
-    // Your code goes here...
+		void push_front(const int& value);
+		void pop_front();
 
-};
+		void resize(size_t count, const int& value = int());
+		void swap(list& other);
+		void clear();
 
-}  // namespace task
+
+
+		//  ---  Operations  ---  //
+
+		void remove(const int& value);
+		void unique();
+		void sort();
+
+	private:
+
+		//  ---  Element struct  ---  //
+
+		struct list_item {
+			int value;
+			list_item* prev_item, * next_item;
+
+			list_item(
+				const int& value = int(),
+				list_item* prev_item = nullptr,
+				list_item* next_item = nullptr
+				);
+		};
+
+		//  ---  Private methods  ---  //
+
+		void _pop_item(const list_item*);
+		void _insert_value(const int&, list_item*, list_item*);
+
+		size_t _size;
+		list_item* _begin, * _end;
+	};
+
+}
