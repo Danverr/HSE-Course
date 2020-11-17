@@ -15,7 +15,7 @@
 
 #include "gtest/gtest.h"
 
-double dist(const Point& a, const Point& b) {
+double test_dist(const Point& a, const Point& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y-b.y));
 }
 
@@ -23,7 +23,7 @@ TEST(PointsDistance, TestOne) {
     Point a(3, 0);
     Point b(0, 4);
 
-    ASSERT_NEAR(dist(a, b), 5.0, 6);
+    ASSERT_NEAR(test_dist(a, b), 5.0, 6);
 }
 
 TEST(Polygon, EqualOperator) {

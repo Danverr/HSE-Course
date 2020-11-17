@@ -36,3 +36,6 @@ add_executable(geometry tests.cpp)
 target_link_libraries(geometry LINK_PUBLIC hierarchy gtest_main)
 
 add_test(NAME geometry_test COMMAND geometry)
+
+target_compile_options(geometry PUBLIC -fsanitize=address,undefined,leak)
+target_link_options(geometry PUBLIC -fsanitize=address,undefined,leak)
