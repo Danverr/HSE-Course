@@ -18,17 +18,17 @@ public:
 	Shape& reflex(const Line& axis) override;
 	Shape& scale(const Point& center, const double& coef) override;
 		
-    std::pair<Point, Point> focuses() const;
-    std::pair<Line, Line> directrices() const;
-    double eccentricity() const;
-    Point center() const;
-
-protected:
+	std::pair<Point, Point> focuses() const;
+	std::pair<Line, Line> directrices() const;
+	double eccentricity() const;
+	Point center() const;	
 	
+protected:
+
 	double c() const;
 	double b() const;
-	
-    Point f1, f2;
-    double a;
-    
+
+	Point f1, f2;
+	double a;
+
 };
